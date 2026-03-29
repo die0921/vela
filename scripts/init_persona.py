@@ -1,4 +1,5 @@
 # scripts/init_persona.py
+import sqlite3
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -6,7 +7,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.db import Database
 from scripts.memory_manager import MemoryManager
 from scripts.questionnaire import run_questionnaire
-from scripts.ai_client import embed
 
 
 CONSENT_MESSAGE = """
@@ -40,40 +40,50 @@ def init(name: str | None = None) -> int | None:
     db = Database()
     result = run_questionnaire(persona_id=0, db=db)  # temp id=0
 
-    # Create persona with extracted baselines
-    persona_id = db.create_persona(
-        name=name,
-        base_emotion=result["base_emotion"],
-        base_sadness=result["base_sadness"],
-        base_anger=result["base_anger"]
-    )
-
-    # Re-save answers with correct persona_id (questionnaire used temp id=0)
-    import sqlite3
-    with sqlite3.connect(db.db_path) as conn:
-        conn.execute(
-            "UPDATE questionnaire_answers SET persona_id=? WHERE persona_id=0",
-            (persona_id,)
+    persona_id: int | None = None
+    try:
+        # Create persona with extracted baselines
+        persona_id = db.create_persona(
+            name=name,
+            base_emotion=result["base_emotion"],
+            base_sadness=result["base_sadness"],
+            base_anger=result["base_anger"]
         )
 
-    # Save values profile
-    db.save_values_profile(
-        persona_id,
-        core_values=result["core_values"],
-        red_lines=result["red_lines"],
-        scenarios=result["scenarios"]
-    )
+        # Re-save answers with correct persona_id (questionnaire used temp id=0)
+        with sqlite3.connect(db.db_path) as conn:
+            conn.execute(
+                "UPDATE questionnaire_answers SET persona_id=? WHERE persona_id=0",
+                (persona_id,)
+            )
 
-    # Initialize emotion state
-    db.init_emotion_state(persona_id)
+        # Save values profile
+        db.save_values_profile(
+            persona_id,
+            core_values=result["core_values"],
+            red_lines=result["red_lines"],
+            scenarios=result["scenarios"]
+        )
 
-    # Vectorize all answers into ChromaDB
-    print("\n正在向量化记忆...")
-    mm = MemoryManager(persona_id=persona_id)
-    answers = db.get_answers(persona_id)
-    for ans in answers:
-        text = f"问：{ans['question']}\n答：{ans['answer']}"
-        mm.add(ans["dimension"], text, {"dimension": ans["dimension"]})
+        # Initialize emotion state
+        db.init_emotion_state(persona_id)
+
+        # Vectorize all answers into ChromaDB
+        print("\n正在向量化记忆...")
+        mm = MemoryManager(persona_id=persona_id)
+        answers = db.get_answers(persona_id)
+        for ans in answers:
+            text = f"问：{ans['question']}\n答：{ans['answer']}"
+            mm.add(ans["dimension"], text, {"dimension": ans["dimension"]})
+
+    except Exception as exc:
+        # Clean up orphaned temp rows and partially created persona
+        with sqlite3.connect(db.db_path) as conn:
+            conn.execute("DELETE FROM questionnaire_answers WHERE persona_id=0")
+            if persona_id is not None:
+                conn.execute("DELETE FROM personas WHERE id=?", (persona_id,))
+        print(f"\n创建失败：{exc}")
+        return None
 
     print(f"\n✓ 副本 [{name}] 已成功创建！(ID: {persona_id})")
     print(f"  记忆条数：{mm.count()}")
