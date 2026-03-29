@@ -1,0 +1,23 @@
+{
+  "id": "digital-persona",
+  "name": "Digital Persona",
+  "description": "Chat with your digital persona — an AI replica built from your memories, values, and emotions.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "personaId": {
+        "type": "number",
+        "description": "Persona ID to use (default: 1)"
+      },
+      "pythonPath": {
+        "type": "string",
+        "description": "Path to python executable (default: python)"
+      },
+      "projectPath": {
+        "type": "string",
+        "description": "Absolute path to digital-persona project directory"
+      }
+    }
+  }
+}

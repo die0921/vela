@@ -1,0 +1,13 @@
+{
+  "name": "@local/openclaw-digital-persona",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Digital Persona agent plugin for OpenClaw",
+  "main": "./index.ts",
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  },
+  "devDependencies": {
+    "openclaw": "*"
+  }
+}

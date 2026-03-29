@@ -1,39 +1,38 @@
 import json
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-from openai import OpenAI
+import anthropic
+from sentence_transformers import SentenceTransformer
 
-load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
-
-
-def _get_client() -> OpenAI:
-    """Return a cached OpenAI client, created once per process."""
-    if not hasattr(_get_client, "_instance"):
-        _get_client._instance = OpenAI(
-            api_key=os.getenv("AI_API_KEY", ""),
-            base_url=os.getenv("AI_BASE_URL", "https://api.openai.com/v1")
-        )
-    return _get_client._instance
+_client = anthropic.Anthropic()
+_embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+_CHAT_MODEL = "claude-haiku-4-5-20251001"
 
 
 def embed(text: str) -> list[float]:
-    """Return embedding vector for text."""
-    model = os.getenv("EMBED_MODEL", "text-embedding-3-small")
-    response = _get_client().embeddings.create(input=text, model=model)
-    return response.data[0].embedding
+    """Return embedding vector using local sentence-transformers model."""
+    return _embed_model.encode(text).tolist()
 
 
 def chat(messages: list[dict[str, str]], temperature: float = 0.7) -> str:
     """Send messages and return assistant reply text."""
-    model = os.getenv("AI_MODEL", "gpt-4o")
-    response = _get_client().chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=temperature
-    )
-    content = response.choices[0].message.content
-    return content if content is not None else ""
+    system = ""
+    anthropic_messages: list[dict] = []
+    for msg in messages:
+        if msg["role"] == "system":
+            system = msg["content"]
+        else:
+            anthropic_messages.append({"role": msg["role"], "content": msg["content"]})
+
+    kwargs: dict = {
+        "model": _CHAT_MODEL,
+        "max_tokens": 1024,
+        "messages": anthropic_messages,
+        "temperature": temperature,
+    }
+    if system:
+        kwargs["system"] = system
+
+    response = _client.messages.create(**kwargs)
+    return response.content[0].text
 
 
 def guard_check(user_message: str, values_profile: dict) -> dict:
