@@ -46,6 +46,9 @@ env/
 Thumbs.db
 
 # Project specific
+data/
+!data/.gitkeep
+*.db
 data/chroma/
 .pytest_cache/
 htmlcov/
