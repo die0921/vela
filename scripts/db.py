@@ -179,7 +179,7 @@ class Database:
     def get_recent_conversations(self, persona_id: int, limit: int = 10) -> list:
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM conversations WHERE persona_id=? ORDER BY created_at ASC LIMIT ?",
+                "SELECT * FROM conversations WHERE persona_id=? ORDER BY created_at DESC LIMIT ?",
                 (persona_id, limit)
             ).fetchall()
             return [dict(r) for r in rows]

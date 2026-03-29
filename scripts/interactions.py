@@ -16,7 +16,11 @@ _ENGINE = EmotionEngine()
 
 def apply_interaction(persona_id: int, action_type: str, db: Database) -> dict:
     """Apply an interaction action and persist new emotion state."""
+    if action_type not in ACTIONS:
+        raise ValueError(f"Unknown action_type: {action_type!r}")
     state = db.get_emotion_state(persona_id)
+    if state is None:
+        raise ValueError(f"No emotion state found for persona_id={persona_id}")
     new_state = _ENGINE.apply_interaction(state, action_type)
     db.update_emotion_state(
         persona_id,
