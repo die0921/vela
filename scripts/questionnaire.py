@@ -1,3 +1,5 @@
+from scripts.db import Database
+
 MEMORY_QUESTIONS: dict[str, list[str]] = {
     "memory": [
         "你童年最深刻的记忆是什么？",
@@ -70,7 +72,7 @@ VALUES_LIST: list[str] = [
 ]
 
 
-def run_questionnaire(persona_id: int, db) -> dict:
+def run_questionnaire(persona_id: int, db: Database) -> dict:
     """
     Interactive CLI questionnaire. Returns values_profile dict.
     Saves all answers to db.
@@ -93,7 +95,11 @@ def run_questionnaire(persona_id: int, db) -> dict:
     raw_ie = input("你平时整体情绪状态如何？（0=很差，100=很好）: ").strip()
     base_emotion = max(0, min(100, int(raw_ie) if raw_ie.isdigit() else 70))
 
-    raw_type = input("你更容易悲伤(1) 还是愤怒(2)？ [1/2]: ").strip()
+    while True:
+        raw_type = input("你更容易悲伤(1) 还是愤怒(2)？ [1/2]: ").strip()
+        if raw_type in ("1", "2"):
+            break
+        print("请输入 1 或 2")
     emotion_type = "sad" if raw_type == "1" else "angry"
     base_sadness = 65 if emotion_type == "sad" else 80
     base_anger = 65 if emotion_type == "angry" else 80
@@ -114,6 +120,8 @@ def run_questionnaire(persona_id: int, db) -> dict:
     raw = input("\n你的选择（例如：1,3,5,7,9）: ").strip()
     indices = [int(x.strip()) - 1 for x in raw.split(",") if x.strip().isdigit()]
     core_values = [VALUES_LIST[i] for i in indices if 0 <= i < len(VALUES_LIST)][:5]
+    if len(core_values) < 5:
+        print(f"注意：你只选择了 {len(core_values)} 个价值观（建议5个）")
 
     # Part 4: Scenario questions
     print("\n--- 情景题 ---\n")
