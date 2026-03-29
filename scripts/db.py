@@ -18,7 +18,7 @@ class Database:
         conn.row_factory = sqlite3.Row
         return conn
 
-    def _init_schema(self):
+    def _init_schema(self) -> None:
         with self._conn() as conn:
             conn.executescript("""
                 CREATE TABLE IF NOT EXISTS personas (
@@ -84,7 +84,7 @@ class Database:
             )
             return cur.lastrowid
 
-    def get_persona(self, persona_id: int) -> dict:
+    def get_persona(self, persona_id: int) -> dict | None:
         with self._conn() as conn:
             row = conn.execute("SELECT * FROM personas WHERE id=?", (persona_id,)).fetchone()
             return dict(row) if row else None
@@ -94,7 +94,7 @@ class Database:
             rows = conn.execute("SELECT * FROM personas ORDER BY created_at DESC").fetchall()
             return [dict(r) for r in rows]
 
-    def save_answer(self, persona_id: int, dimension: str, question: str, answer: str):
+    def save_answer(self, persona_id: int, dimension: str, question: str, answer: str) -> None:
         with self._conn() as conn:
             conn.execute(
                 "INSERT INTO questionnaire_answers (persona_id, dimension, question, answer) VALUES (?,?,?,?)",
@@ -115,7 +115,7 @@ class Database:
                 ).fetchall()
             return [dict(r) for r in rows]
 
-    def save_values_profile(self, persona_id: int, core_values: list, red_lines: list, scenarios: dict):
+    def save_values_profile(self, persona_id: int, core_values: list, red_lines: list, scenarios: dict) -> None:
         with self._conn() as conn:
             conn.execute(
                 """INSERT INTO values_profile (persona_id, core_values, red_lines, scenarios)
@@ -140,8 +140,10 @@ class Database:
                 "scenarios": json.loads(row["scenarios"])
             }
 
-    def init_emotion_state(self, persona_id: int):
+    def init_emotion_state(self, persona_id: int) -> None:
         persona = self.get_persona(persona_id)
+        if persona is None:
+            raise ValueError(f"Persona {persona_id} not found")
         with self._conn() as conn:
             conn.execute(
                 """INSERT INTO emotion_state (persona_id, instant_emotion, sadness, anger)
@@ -150,12 +152,12 @@ class Database:
                 (persona_id, persona["base_emotion"], persona["base_sadness"], persona["base_anger"])
             )
 
-    def get_emotion_state(self, persona_id: int) -> dict:
+    def get_emotion_state(self, persona_id: int) -> dict | None:
         with self._conn() as conn:
             row = conn.execute("SELECT * FROM emotion_state WHERE persona_id=?", (persona_id,)).fetchone()
             return dict(row) if row else None
 
-    def update_emotion_state(self, persona_id: int, instant_emotion: int, sadness: int, anger: int):
+    def update_emotion_state(self, persona_id: int, instant_emotion: int, sadness: int, anger: int) -> None:
         with self._conn() as conn:
             conn.execute(
                 """UPDATE emotion_state
@@ -167,7 +169,7 @@ class Database:
                  persona_id)
             )
 
-    def save_conversation(self, persona_id: int, role: str, content: str, emotion_snapshot: dict):
+    def save_conversation(self, persona_id: int, role: str, content: str, emotion_snapshot: dict) -> None:
         with self._conn() as conn:
             conn.execute(
                 "INSERT INTO conversations (persona_id, role, content, emotion_snapshot) VALUES (?,?,?,?)",
@@ -182,14 +184,14 @@ class Database:
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def log_interaction(self, persona_id: int, action_type: str, emotion_delta: dict):
+    def log_interaction(self, persona_id: int, action_type: str, emotion_delta: dict) -> None:
         with self._conn() as conn:
             conn.execute(
                 "INSERT INTO interaction_log (persona_id, action_type, emotion_delta) VALUES (?,?,?)",
                 (persona_id, action_type, json.dumps(emotion_delta))
             )
 
-    def log_maintenance(self, persona_id: int, task_type: str, result: dict):
+    def log_maintenance(self, persona_id: int, task_type: str, result: dict) -> None:
         with self._conn() as conn:
             conn.execute(
                 "INSERT INTO maintenance_log (persona_id, task_type, result) VALUES (?,?,?)",
