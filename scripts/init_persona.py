@@ -90,7 +90,42 @@ def init(name: str | None = None) -> int | None:
     print(f"  情绪基线：即时={result['base_emotion']} 悲伤={result['base_sadness']} 愤怒={result['base_anger']}")
     print(f"  核心价值观：{', '.join(result['core_values'])}")
 
+    register_cron_tasks(persona_id)
     return persona_id
+
+
+def register_cron_tasks(persona_id: int) -> list[dict]:
+    """Print cron task definitions for manual registration via Claude Code CronCreate."""
+    base = str(Path(__file__).parent.parent)
+    tasks = [
+        {
+            "name": f"persona_{persona_id}_hourly",
+            "schedule": "0 * * * *",
+            "command": f"python {base}/scripts/maintenance.py {persona_id}"
+        },
+        {
+            "name": f"persona_{persona_id}_daily",
+            "schedule": "0 3 * * *",
+            "command": (
+                f"python -c \"import sys; sys.path.insert(0,'{base}'); "
+                f"from scripts.maintenance import run_memory_consolidation; "
+                f"from scripts.db import Database; run_memory_consolidation({persona_id}, Database())\""
+            )
+        },
+        {
+            "name": f"persona_{persona_id}_weekly",
+            "schedule": "0 4 * * 0",
+            "command": (
+                f"python -c \"import sys; sys.path.insert(0,'{base}'); "
+                f"from scripts.maintenance import run_soul_consistency_check; "
+                f"from scripts.db import Database; run_soul_consistency_check({persona_id}, Database())\""
+            )
+        }
+    ]
+    print("\n定时任务已就绪（需在 Claude Code 中通过 CronCreate 注册）：")
+    for t in tasks:
+        print(f"  · {t['name']}: {t['schedule']}")
+    return tasks
 
 
 if __name__ == "__main__":
