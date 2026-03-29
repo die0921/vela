@@ -3,6 +3,8 @@ from scripts.values_guard import ValuesGuard
 from scripts.emotion_engine import EmotionEngine
 from scripts.ai_client import chat, guard_check
 
+_ENGINE = EmotionEngine()
+
 
 def _build_system_prompt(
     persona: dict,
@@ -17,8 +19,7 @@ def _build_system_prompt(
     sad = emotion_state["sadness"]
     ang = emotion_state["anger"]
 
-    engine = EmotionEngine()
-    behavior = engine.get_behavior_instruction(emotion_state)
+    behavior = _ENGINE.get_behavior_instruction(emotion_state)
     memory_text = "\n".join(f"- {m['text']}" for m in memories) if memories else "（暂无相关记忆）"
 
     return f"""你是 {name}。
@@ -61,6 +62,8 @@ class ResponsePipeline:
         Three-layer pipeline.
         Returns {"blocked": bool, "reply": str, "anger_delta": int, "topic_sentiment": float}
         """
+        if self._persona is None or self._values is None or self._state is None:
+            raise RuntimeError("ResponsePipeline.load() must be called before run()")
         if memories is None:
             memories = []
 

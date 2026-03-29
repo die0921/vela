@@ -32,7 +32,8 @@ def chat(messages: list[dict[str, str]], temperature: float = 0.7) -> str:
         messages=messages,
         temperature=temperature
     )
-    return response.choices[0].message.content
+    content = response.choices[0].message.content
+    return content if content is not None else ""
 
 
 def guard_check(user_message: str, values_profile: dict) -> dict:

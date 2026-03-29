@@ -49,3 +49,10 @@ def test_layer2_block():
         result = pipeline.run("做个坏事")
     assert result["blocked"] is True
     assert result["anger_delta"] < 0
+
+
+def test_run_before_load_raises():
+    pipeline = ResponsePipeline()
+    import pytest
+    with pytest.raises(RuntimeError, match="load\\(\\)"):
+        pipeline.run("任何消息")
