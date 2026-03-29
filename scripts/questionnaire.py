@@ -92,8 +92,12 @@ def run_questionnaire(persona_id: int, db: Database) -> dict:
     print("\n--- 情绪基线 ---\n")
     print("以下问题帮助建立你的情绪基线（0-100分）\n")
 
-    raw_ie = input("你平时整体情绪状态如何？（0=很差，100=很好）: ").strip()
-    base_emotion = max(0, min(100, int(raw_ie) if raw_ie.isdigit() else 70))
+    while True:
+        raw_ie = input("你平时整体情绪状态如何？（0=很差，100=很好）: ").strip()
+        if raw_ie.lstrip("-").isdigit():
+            base_emotion = max(0, min(100, int(raw_ie)))
+            break
+        print("请输入 0 到 100 之间的数字")
 
     while True:
         raw_type = input("你更容易悲伤(1) 还是愤怒(2)？ [1/2]: ").strip()
