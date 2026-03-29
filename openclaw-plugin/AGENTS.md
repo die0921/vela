@@ -1,4 +1,4 @@
-# Digital Persona Agent — OpenClaw 使用说明
+# Vela Agent (我心即你) — OpenClaw 使用说明
 
 ## 角色定位
 

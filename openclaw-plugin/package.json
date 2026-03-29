@@ -1,8 +1,8 @@
 {
-  "name": "@local/openclaw-digital-persona",
+  "name": "@local/openclaw-vela",
   "version": "1.0.0",
   "type": "module",
-  "description": "Digital Persona agent plugin for OpenClaw",
+  "description": "Vela (我心即你) agent plugin for OpenClaw",
   "main": "./index.ts",
   "openclaw": {
     "extensions": ["./index.ts"]

@@ -1,4 +1,4 @@
-# Digital Persona
+# 我心即你 (Vela)
 
 一个运行在本地的数字副本 Agent，基于你真实的记忆、价值观和情绪系统构建。支持在 **Claude Code** 和 **OpenClaw** 中使用。
 
@@ -21,8 +21,8 @@
 ### 安装
 
 ```bash
-git clone https://github.com/die0921/digital-persona.git
-cd digital-persona
+git clone https://github.com/die0921/vela.git
+cd vela
 pip install -r requirements.txt
 ```
 
@@ -63,7 +63,7 @@ python scripts/interactions.py <persona_id> do_together
 ## 目录结构
 
 ```
-digital-persona/
+vela/
 ├── agent.md                  # Claude Code agent 定义
 ├── scripts/
 │   ├── init_persona.py       # 初始化流程（同意 + 问卷 + 建库）
@@ -108,12 +108,12 @@ openclaw plugins install ./openclaw-plugin
 
 ### 插件配置
 
-在 OpenClaw 设置中配置 `digital-persona` 插件：
+在 OpenClaw 设置中配置 `vela` 插件：
 
 ```json
 {
   "personaId": 1,
-  "projectPath": "/path/to/digital-persona",
+  "projectPath": "/path/to/vela",
   "pythonPath": "python"
 }
 ```
