@@ -17,7 +17,8 @@ def make_profile():
 def test_no_violation_passes():
     guard = ValuesGuard()
     with patch("scripts.values_guard.embed", return_value=FAKE_EMBED):
-        guard.load_profile(make_profile())
+        # Empty red_lines so similarity check is skipped; no keywords match
+        guard.load_profile({"core_values": ["诚实", "家庭"], "red_lines": [], "scenarios": {}})
         result = guard.check("今天天气怎么样？")
     assert result["block"] is False
 

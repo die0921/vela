@@ -19,19 +19,13 @@ def _cosine_similarity(a: list[float], b: list[float]) -> float:
 
 class ValuesGuard:
     def __init__(self) -> None:
-        self._red_lines: list[str] = []
         self._red_line_embeddings: list[tuple[str, list[float]]] = []
 
     def load_profile(self, values_profile: dict) -> None:
-        """Store red lines; embeddings are computed lazily on first similarity check."""
-        self._red_lines = list(values_profile.get("red_lines", []))
-        self._red_line_embeddings = []  # reset; populated by load_embeddings()
-
-    def load_embeddings(self) -> None:
-        """Pre-compute embeddings for all red lines (call explicitly when needed)."""
+        """Pre-embed red lines for fast similarity check at query time."""
         self._red_line_embeddings = [
             (line, embed(line))
-            for line in self._red_lines
+            for line in values_profile.get("red_lines", [])
         ]
 
     def check(self, user_message: str) -> dict:
