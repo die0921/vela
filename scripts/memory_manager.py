@@ -1,10 +1,11 @@
 from pathlib import Path
 import chromadb
+import uuid
 from scripts.ai_client import embed
 
 
 class MemoryManager:
-    def __init__(self, persona_id: int, chroma_path: str = None):
+    def __init__(self, persona_id: int, chroma_path: str | None = None):
         self.persona_id = persona_id
         if chroma_path is None:
             chroma_path = str(Path(__file__).parent.parent / "data" / "chroma")
@@ -17,8 +18,7 @@ class MemoryManager:
     def add(self, source_type: str, text: str, metadata: dict) -> None:
         """Embed text and store in ChromaDB."""
         vector = embed(text)
-        import hashlib, time
-        doc_id = hashlib.md5(f"{text}{time.time()}".encode()).hexdigest()
+        doc_id = str(uuid.uuid4())
         meta = {"source_type": source_type, **metadata}
         self.collection.add(
             ids=[doc_id],
